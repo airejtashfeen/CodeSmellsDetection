@@ -11,7 +11,6 @@ class CodeSmellDetector:
         self.directory = directory
 
     def scan_for_smells(self):
-        """Scan the directory for Python files and analyze them for code smells."""
         global code_smell_count
         code_smell_count = 0
         smells = []
@@ -26,7 +25,6 @@ class CodeSmellDetector:
         return smells
 
     def analyze_file(self, file_path):
-        """Analyze a Python file for common code smells."""
         global code_smell_count
         smells = []
 
@@ -35,23 +33,16 @@ class CodeSmellDetector:
                 content = file.read()
                 tree = ast.parse(content)
 
-                # Check for large functions, arguments, return statements, and loops
                 smells.extend(self.check_functions(tree, file_path))
-
-                # Check for large classes and too many methods
                 smells.extend(self.check_classes(tree, file_path))
-
-            # Check for cyclomatic complexity using Radon
-            smells.extend(self.check_complexity(file_path))
-
-            # Check for duplicated code blocks
-            smells.extend(self.check_for_duplicates(content))
-
-            # Check for magic numbers in the code
-            smells.extend(self.check_for_magic_numbers(content))
-
-            # Check for deep inheritance chains
-            smells.extend(self.check_for_deep_inheritance(tree))
+                smells.extend(self.check_complexity(file_path))
+                smells.extend(self.check_for_duplicates(content))
+                smells.extend(self.check_for_magic_numbers(content))
+                smells.extend(self.check_for_deep_inheritance(tree))
+                smells.extend(self.check_excessive_comments(content, file_path))
+                smells.extend(self.check_unnecessary_imports(content, file_path))
+                smells.extend(self.check_long_lines(content, file_path))
+                smells.extend(self.check_unreachable_code(tree, file_path))
 
         except Exception as e:
             smells.append(f"Error analyzing file {file_path}: {str(e)}")
@@ -60,35 +51,29 @@ class CodeSmellDetector:
         return smells
 
     def check_functions(self, tree, file_path):
-        """Detect smells in functions like size, arguments, and structure."""
         global code_smell_count
         issues = []
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                # Check large functions
                 if len(node.body) > 10:
                     issues.append(f"Large function: {node.name} in {file_path}")
                     code_smell_count += 1
 
-                # Check too many arguments
                 if len(node.args.args) > 5:
                     issues.append(f"Too many arguments: {node.name} in {file_path}")
                     code_smell_count += 1
 
-                # Check too many return statements
                 return_statements = sum(isinstance(n, ast.Return) for n in node.body)
                 if return_statements > 2:
                     issues.append(f"Too many return statements: {node.name} in {file_path}")
                     code_smell_count += 1
 
-                # Check deeply nested loops
                 nested_loops = sum(1 for n in node.body if isinstance(n, (ast.For, ast.While)))
                 if nested_loops > 3:
                     issues.append(f"Too many nested loops: {node.name} in {file_path}")
                     code_smell_count += 1
 
-                # Check if-else chains
                 if_else_count = sum(1 for n in node.body if isinstance(n, ast.If))
                 if if_else_count > 5:
                     issues.append(f"Too many if-else blocks: {node.name} in {file_path}")
@@ -97,19 +82,16 @@ class CodeSmellDetector:
         return issues
 
     def check_classes(self, tree, file_path):
-        """Detect smells in class definitions like size and number of methods."""
         global code_smell_count
         issues = []
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
-                # Check for large classes
                 class_lines = len([n for n in node.body if isinstance(n, (ast.FunctionDef, ast.Assign))])
                 if class_lines > 50:
                     issues.append(f"Large class: {node.name} in {file_path}")
                     code_smell_count += 1
 
-                # Check too many methods in a class
                 num_methods = len([n for n in node.body if isinstance(n, ast.FunctionDef)])
                 if num_methods > 10:
                     issues.append(f"Too many methods in class: {node.name} in {file_path}")
@@ -118,7 +100,6 @@ class CodeSmellDetector:
         return issues
 
     def check_complexity(self, file_path):
-        """Check for high cyclomatic complexity using Radon."""
         global code_smell_count
         issues = []
 
@@ -126,10 +107,12 @@ class CodeSmellDetector:
             with open(file_path, 'r', errors='ignore', encoding='utf-8') as file:
                 content = file.read()
                 results = radon_complexity.cc_visit(content)
+
                 for result in results:
                     if result.complexity > 10:
                         issues.append(f"High complexity: {result.name} in {file_path} with complexity {result.complexity}")
                         code_smell_count += 1
+
         except Exception as e:
             issues.append(f"Error analyzing complexity for {file_path}: {str(e)}")
             code_smell_count += 1
@@ -137,7 +120,6 @@ class CodeSmellDetector:
         return issues
 
     def check_for_duplicates(self, content):
-        """Check for duplicated blocks of code."""
         global code_smell_count
         issues = []
         lines = content.split('\n')
@@ -154,20 +136,18 @@ class CodeSmellDetector:
         return issues
 
     def check_for_magic_numbers(self, content):
-        """Check for magic numbers in the code."""
         global code_smell_count
         issues = []
         lines = content.split('\n')
 
         for line_num, line in enumerate(lines, start=1):
             if any(char.isdigit() for char in line):
-                issues.append(f"Magic number detected at line {line_num}: {line.strip()}")
+                issues.append(f"Magic number detected at line {line_num}")
                 code_smell_count += 1
 
         return issues
 
     def check_for_deep_inheritance(self, tree):
-        """Check for deep inheritance chains."""
         global code_smell_count
         issues = []
 
@@ -177,19 +157,73 @@ class CodeSmellDetector:
                 code_smell_count += 1
 
         return issues
-    
-    def get_smells_count(self) :
-        return code_smell_count
+
+    def check_excessive_comments(self, content, file_path):
+        global code_smell_count
+        issues = []
+
+        comment_count = content.count("#")
+        if comment_count > 20:
+            issues.append(f"Excessive comments in {file_path} (more than 20 comments)")
+            code_smell_count += 1
+
+        return issues
+
+    def check_unnecessary_imports(self, content, file_path):
+        global code_smell_count
+        issues = []
+
+        lines = content.split('\n')
+        imported_modules = set()
+
+        for line in lines:
+            if line.startswith("import ") or line.startswith("from "):
+                imported_modules.add(line.strip())
+
+        if len(imported_modules) > 15:
+            issues.append(f"Unnecessary number of imports in {file_path}")
+            code_smell_count += 1
+
+        return issues
+
+    def check_long_lines(self, content, file_path):
+        global code_smell_count
+        issues = []
+
+        lines = content.split('\n')
+        for i, line in enumerate(lines, start=1):
+            if len(line) > 120:
+                issues.append(f"Long line detected in {file_path} at line {i}")
+                code_smell_count += 1
+
+        return issues
+
+    def check_unreachable_code(self, tree, file_path):
+        global code_smell_count
+        issues = []
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                has_return = False
+                for stmt in node.body:
+                    if isinstance(stmt, ast.Return):
+                        has_return = True
+                    elif has_return:
+                        issues.append(f"Unreachable code after return in function {node.name} in {file_path}")
+                        code_smell_count += 1
+                        break
+
+        return issues
 
 
-# Run the scan on a given directory
 if __name__ == "__main__":
     directory = input("Enter the directory to scan for code smells: ")
     detector = CodeSmellDetector(directory)
     smells = detector.scan_for_smells()
 
     if smells:
-        print("Code smells detected:")
+        print("\nCode smells detected:")
         for smell in smells:
             print(smell)
+
     print(f"\nTotal code smells detected: {code_smell_count}")
