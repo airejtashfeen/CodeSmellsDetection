@@ -8,18 +8,19 @@ Code Smells Detection is a project designed to identify and analyze code smells 
 - [Usage](#usage)
 - [Technologies Used](#technologies-used)
 - [Contributing](#contributing)
-- [License](#license)
+
 
 ## Features
-- Detects common code smells such as Long Methods, Large Classes, and Duplicated Code.
+- Detects common code smells such as Long Methods, Large Classes, Duplicated Code etc.
 - Outputs detailed reports highlighting the affected code areas.
 - Supports multiple programming languages.
-- Easy-to-use CLI-based interface.
+- Easy-to-use GUI and CLI-based interface.
 
 ## Installation
 
 ### Prerequisites
 - Python 3.8 or later
+- Tkinter
 - Git
 - Virtual Environment (Optional but recommended)
 
@@ -45,13 +46,22 @@ Code Smells Detection is a project designed to identify and analyze code smells 
 
 1. Ensure the repository is set up and dependencies are installed.
 2. Run the main script to analyze a project for code smells:
+
+**GUI MODE**
    ```bash
-   python main.py --project-path /path/to/your/codebase
+   python frontend.py
+   ```
+
+**CLI MODE**
+   ```bash
+   python code_smells_detection.py
+   /path/to/your/codebase
    ```
 3. Review the generated report for identified code smells.
 
 ## Technologies Used
 - **Python**: Core programming language for the project.
+- **Tkinter**: For building the GUI.
 - **Git**: Version control system.
 
 ## Contributing
