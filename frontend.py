@@ -62,6 +62,10 @@ class Frontend:
         folder_path = filedialog.askdirectory()  # Open a dialog to select a folder
         if folder_path:
             self.file_path = folder_path  # Save the selected folder path
+            self.result_text.delete(1.0, END)
+            self.result_text.insert(
+            END, "Folder selected. Please press the detect smells button to proceed.\n"
+            )
         else:
             self.result_text.delete(1.0, END)
             self.result_text.insert(
