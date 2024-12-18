@@ -86,10 +86,9 @@ class Frontend:
             self.result_text.delete(1.0, END)  # Clear previous results
             if smells :
                 self.result_text.insert(END, "Code smells detected:\n")
+                self.result_text.insert(END, f"\nTotal code smells detected: {code_smell_count}\n\n")
                 for smell in smells:
                     self.result_text.insert(END, f"- {smell}\n")
-                # Display the total count of code smells
-                self.result_text.insert(END, f"\nTotal code smells detected: {code_smell_count}\n")
             else:
                 self.result_text.insert(END, "No code smells detected.\n")
         else:

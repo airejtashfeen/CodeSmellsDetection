@@ -142,7 +142,7 @@ class CodeSmellDetector:
 
         for line_num, line in enumerate(lines, start=1):
             if any(char.isdigit() for char in line):
-                issues.append(f"Magic number detected at line {line_num}")
+                issues.append(f"Potential Magic number detected at line {line_num}")
                 code_smell_count += 1
 
         return issues
@@ -214,6 +214,9 @@ class CodeSmellDetector:
                         break
 
         return issues
+    
+    def get_smells_count(self) :
+        return code_smell_count
 
 
 if __name__ == "__main__":
