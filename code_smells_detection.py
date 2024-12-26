@@ -3,7 +3,7 @@ import os
 import radon.complexity as radon_complexity
 from radon.visitors import ComplexityVisitor
 
-# Global counter for code smells
+# A counter for code smells
 code_smell_count = 0
 
 class CodeSmellDetector:
@@ -15,7 +15,7 @@ class CodeSmellDetector:
         code_smell_count = 0
         smells = []
 
-        # Walk through the directory to find Python files
+        # Walk through the directory and find any Python files
         for root, dirs, files in os.walk(self.directory):
             for file in files:
                 if file.endswith('.py'):
@@ -29,6 +29,7 @@ class CodeSmellDetector:
         smells = []
 
         try:
+            # Open the file in read mode with UTF-8 encoding, ignoring errors
             with open(file_path, 'r', errors='ignore', encoding='utf-8') as file:
                 content = file.read()
                 tree = ast.parse(content)
@@ -56,7 +57,7 @@ class CodeSmellDetector:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                if len(node.body) > 10:
+                if len(node.body) > 100:
                     issues.append(f"Large function: {node.name} in {file_path}")
                     code_smell_count += 1
 
@@ -87,14 +88,16 @@ class CodeSmellDetector:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
-                class_lines = len([n for n in node.body if isinstance(n, (ast.FunctionDef, ast.Assign))])
-                if class_lines > 50:
-                    issues.append(f"Large class: {node.name} in {file_path}")
-                    code_smell_count += 1
+                # LOC refers to lines of code
+                class_loc = sum(1 for n in node.body if isinstance(n, (ast.FunctionDef, ast.Assign)))
 
-                num_methods = len([n for n in node.body if isinstance(n, ast.FunctionDef)])
-                if num_methods > 10:
-                    issues.append(f"Too many methods in class: {node.name} in {file_path}")
+                num_attributes = sum(1 for n in node.body if isinstance(n, ast.Assign))
+
+                num_methods = sum(1 for n in node.body if isinstance(n, ast.FunctionDef))
+
+                if class_loc >= 200 or (num_attributes + num_methods) > 40:
+                    issues.append(f"Large class: {node.name} in {file_path} "
+                                  f"(LOC: {class_loc}, NOA+NOM: {num_attributes + num_methods})")
                     code_smell_count += 1
 
         return issues
@@ -106,6 +109,7 @@ class CodeSmellDetector:
         try:
             with open(file_path, 'r', errors='ignore', encoding='utf-8') as file:
                 content = file.read()
+                # Calculating cyclomatic complexity using radon
                 results = radon_complexity.cc_visit(content)
 
                 for result in results:
@@ -142,7 +146,7 @@ class CodeSmellDetector:
 
         for line_num, line in enumerate(lines, start=1):
             if any(char.isdigit() for char in line):
-                issues.append(f"Potential Magic number detected at line {line_num}")
+                issues.append(f"Potential magic number detected at line {line_num}")
                 code_smell_count += 1
 
         return issues
@@ -192,7 +196,7 @@ class CodeSmellDetector:
 
         lines = content.split('\n')
         for i, line in enumerate(lines, start=1):
-            if len(line) > 120:
+            if len(line) > 80:
                 issues.append(f"Long line detected in {file_path} at line {i}")
                 code_smell_count += 1
 
@@ -214,11 +218,12 @@ class CodeSmellDetector:
                         break
 
         return issues
-    
-    def get_smells_count(self) :
+
+    def get_smells_count(self):
         return code_smell_count
 
 
+# Main function representation
 if __name__ == "__main__":
     directory = input("Enter the directory to scan for code smells: ")
     detector = CodeSmellDetector(directory)
